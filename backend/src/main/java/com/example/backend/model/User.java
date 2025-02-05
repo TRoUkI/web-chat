@@ -18,22 +18,11 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private Integer id;
 
-//    @Column(nullable = false)
-//    private String fullName;
-
     @Column(unique = true, length = 100, nullable = false)
     private String username;
 
     @Column(nullable = false)
     private String password;
-//
-//    @CreationTimestamp
-//    @Column(updatable = false, name = "created_at")
-//    private Date createdAt;
-//
-//    @UpdateTimestamp
-//    @Column(name = "updated_at")
-//    private Date updatedAt;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

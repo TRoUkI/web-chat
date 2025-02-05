@@ -1,0 +1,27 @@
+<div class="container">
+    <div class="card">
+        <h2 class="card-header">Authorization</h2>
+        <div class="card-body">
+            <form [formGroup]="form">
+                <div class="mb-3">
+                    <label class="form-label">Username</label>
+                    <input type="text" formControlName="username" class="form-control"/>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password</label>
+                    <input type="password" formControlName="password" class="form-control"/>
+                </div>
+
+                <button (click)="login()" [disabled]="loading" class="btn btn-primary">
+                    <span *ngIf="loading" class="spinner-border spinner-border-sm"></span>
+                    Log In
+                </button>
+                <button (click)="register()" [disabled]="loading" class="btn btn-secondary ms-2">
+                    Register
+                </button>
+
+                <div *ngIf="errorMessage" class="text-danger mt-2">{{ errorMessage }}</div>
+            </form>
+        </div>
+    </div>
+</div>

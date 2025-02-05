@@ -1,11 +1,10 @@
 package com.example.backend.service;
 
-import com.example.backend.model.User;
+import com.example.backend.DTO.UserDTO;
 import com.example.backend.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @AllArgsConstructor
@@ -13,10 +12,7 @@ import java.util.List;
 public class UserService {
     private final UserRepository userRepository;
 
-    public List<User> allUsers() {
-        List<User> users = new ArrayList<>();
-        userRepository.findAll().forEach(users::add);
-
-        return users;
+    public List<UserDTO> allUsers() {
+        return userRepository.getUserWithoutPassword();
     }
 }

@@ -1,69 +1,40 @@
-<div class="container">
-
-  <div *ngIf="!authorised" class="card">
-    <h4 class="card-header">Login</h4>
-    <div class="card-body">
-      <form [formGroup]="form" (ngSubmit)="onSubmit()">
-        <div class="mb-3">
-          <label class="form-label">Username</label>
-          <input type="text" formControlName="username" class="form-control"
-                 [ngClass]="{ 'is-invalid': submitted && form.controls.username.errors }"/>
-          <div *ngIf="submitted && form.controls.username.errors" class="invalid-feedback">
-            <div *ngIf="form.controls.username.errors.required">Username is required</div>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">Password</label>
-          <input type="password" formControlName="password" class="form-control"
-                 [ngClass]="{ 'is-invalid': submitted && form.controls.password.errors }"/>
-          <div *ngIf="submitted && form.controls.password.errors" class="invalid-feedback">
-            <div *ngIf="form.controls.password.errors.required">Password is required</div>
-          </div>
-        </div>
-        <div>
-          <button [disabled]="loading" class="btn btn-primary">
-            <span *ngIf="loading" class="spinner-border spinner-border-sm me-1"></span>
-            Login
-          </button>
-          <a routerLink="../register" class="btn btn-link">Register</a>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <div *ngIf="authorised" class="messages mat-elevation-z5">
-    <h2>Messages</h2>
-    <mat-divider></mat-divider>
-    <div class="chat-area">
-      <div
-        class="chat-bubble-container"
-        *ngFor="let message of messages"
-        [ngClass]="{ sender: message.userId === 1 }"
-      >
+<div #scrollMe [scrollTop]="scrollMe.scrollHeight" class="container">
+    <div class="messages mat-elevation-z5">
+        <h2>Messages</h2>
+        <mat-divider></mat-divider>
+        <div class="chat-area">
+            <div
+                class="chat-bubble-container"
+                *ngFor="let message of messages"
+                [ngClass]="{ sender: message.userId === Number(localStorage.getItem(userIdStr)), system: !message.userId }">
             <span class="fw-bold">{{
-                message.userId
-              }}</span>
-        <div class="chat-bubble">
-          {{ message.content }}
-          <span class="chat-time">{{
-              message.timestamp | date: 'short'
-            }}</span>
+                    message.userId | username: allUsers
+                }}</span>
+                <div class="chat-bubble">
+                    {{ message.content }}
+                    <span class="chat-time">{{
+                            message.timestamp | date: 'short'
+                        }}</span>
+                </div>
+            </div>
         </div>
-      </div>
+        <div class="input-area">
+            <div class="message-container">
+                <input
+                    type="text"
+                    placeholder="Enter your message..."
+                    [(ngModel)]="message.content"
+                    (keydown.enter)="sendMessage()"
+                    class="message-input"
+                    maxlength="200"
+                />
+                <div class="char-counter" [ngClass]="{'limit-reached': message.content.length > 199}">
+                    {{ message.content?.length || 0 }}/200
+                </div>
+                <button (click)="sendMessage()" class="send-button">
+                    <mat-icon>send</mat-icon>
+                </button>
+            </div>
+        </div>
     </div>
-    <div class="input-area">
-      <div class="message-container">
-        <input
-          type="text"
-          placeholder="Enter your message..."
-          [(ngModel)]="message.content"
-          (keydown.enter)="sendMessage()"
-          class="message-input"
-        />
-        <button (click)="sendMessage()" class="send-button">
-          <mat-icon>send</mat-icon>
-        </button>
-      </div>
-    </div>
-  </div>
 </div>

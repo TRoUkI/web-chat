@@ -1,122 +1,88 @@
-import {Component, OnInit} from '@angular/core';
-import {MatFormField, MatHint, MatLabel} from '@angular/material/form-field';
-import {MatInput} from '@angular/material/input';
+import {Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {MatIcon} from '@angular/material/icon';
-import {FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
-import {DatePipe, NgClass, NgForOf, NgIf} from '@angular/common';
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import {DatePipe, NgClass, NgForOf} from '@angular/common';
 import {MatDivider} from '@angular/material/divider';
-import {MatIconButton} from '@angular/material/button';
 import {WebSocketService} from '../service/web-socket.service';
-import { Message } from '../type/types';
-import {WebChatService} from '../service/web-chat.service';
+import {Message, userIdStr} from '../type/types';
+import {Router} from '@angular/router';
+import {UsernamePipe} from '../pipe/username.pipe';
+import {catchError, forkJoin, merge} from 'rxjs';
 
 @Component({
-  selector: 'app-web-chat',
-  imports: [
-    MatFormField,
-    MatInput,
-    MatLabel,
-    MatHint,
-    ReactiveFormsModule,
-    NgIf,
-    NgClass,
-    MatDivider,
-    MatIcon,
-    NgForOf,
-    MatIconButton,
-    DatePipe,
-    FormsModule
-  ],
-  templateUrl: './web-chat.component.html',
-  styleUrl: './web-chat.component.css'
+    selector: 'app-web-chat',
+    imports: [
+        ReactiveFormsModule,
+        NgClass,
+        MatDivider,
+        MatIcon,
+        NgForOf,
+        DatePipe,
+        FormsModule,
+        UsernamePipe
+    ],
+    templateUrl: './web-chat.component.html',
+    styleUrl: './web-chat.component.css'
 })
 export class WebChatComponent implements OnInit {
-  form!: FormGroup | any;
-  loading = false;
-  submitted = false;
-  authorised = false;
+    localStorage = localStorage;
+    userIdStr = userIdStr;
+    Number = Number;
 
-  messages: Message[] = [];
-  message: Message = {
-    content: ''
-  };
+    @ViewChild('scrollMe') private myScrollContainer: ElementRef | undefined;
 
-  user: any = {};
-  allOnlineUsers: any[] = [];
+    messages: Message[] = [];
+    message: Message = {
+        content: ''
+    };
 
-  constructor(
-    private formBuilder: FormBuilder,
-    private webSocketService: WebSocketService,
-    private webChatService: WebChatService,
-  ) { }
+    allUsers: any[] = [];
 
-  ngOnInit() {
-    this.form = this.formBuilder.group({
-      username: ['', Validators.required],
-      password: ['', Validators.required]
-    });
-
-    this.webSocketService.getMessages().subscribe((msg) => {
-      this.messages.push(msg);
-    });
-    this.messages.push({
-      userId:1,
-      content:"Loreum iprium",
-      timestamp: new Date(),
-    },{
-      userId:2,
-      content:"Loreum iprium",
-      timestamp: new Date(),
-    },{
-      userId:2,
-      content:"Loreum iprium",
-      timestamp: new Date(),
-    },{
-      userId:1,
-      content:"Loreum iprium",
-      timestamp: new Date(),
-    })
-  }
-
-  onSubmit() {
-    this.webChatService.authenticate({username: this.form.username.value, password: this.form.password.value}).subscribe((e)=>{
-      this.authorised = true;
-    })
-    //
-    // // reset alerts on submit
-    // this.alertService.clear();
-    //
-    // // stop here if form is invalid
-    // if (this.form.invalid) {
-    //   return;
-    // }
-    //
-    // this.loading = true;
-    // this.accountService.login(this.f.username.value, this.f.password.value)
-    //   .pipe(first())
-    //   .subscribe({
-    //     next: () => {
-    //       // get return url from query parameters or default to home page
-    //       const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/';
-    //       this.router.navigateByUrl(returnUrl);
-    //     },
-    //     error: error => {
-    //       this.alertService.error(error);
-    //       this.loading = false;
-    //     }
-    //   });
-  }
-
-  sendMessage() {
-    if (this.message.content.trim()) {
-      this.message.userId = this.user.id;
-      this.message.timestamp = new Date();
-      this.webSocketService.sendMessage(this.message);
-      this.message.content = '';
+    constructor(
+        private webSocketService: WebSocketService,
+        private router: Router
+    ) {
     }
-  }
 
-  ngOnDestroy() {
-    this.webSocketService.disconnect();
-  }
+    ngOnInit() {
+        forkJoin({
+            history: this.webSocketService.getHistory(),
+            users: this.webSocketService.getUsers()
+        }).pipe(
+            catchError(error => {
+                this.router.navigate(['/auth/']);
+                throw error;
+            })
+        ).subscribe(({ history, users }) => {
+            this.messages = history;
+            this.allUsers = users;
+        });
+
+        merge(this.webSocketService.getMessages(), this.webSocketService.getSystemMessages())
+            .subscribe((msg) => this.messages.push(msg));
+
+        this.scrollToBottom();
+    }
+
+    sendMessage() {
+        if (this.message.content.trim()) {
+            this.message.userId = Number(localStorage.getItem(userIdStr));
+            this.message.timestamp = new Date();
+            this.webSocketService.sendMessage(this.message);
+            this.message.content = '';
+            this.scrollToBottom();
+        }
+    }
+
+    scrollToBottom(): void {
+        if (this.myScrollContainer?.nativeElement?.scrollTop)
+            try {
+                this.myScrollContainer.nativeElement.scrollTop = this.myScrollContainer.nativeElement.scrollHeight;
+            } catch (err) {
+            }
+    }
+
+    ngOnDestroy() {
+        this.webSocketService.disconnect();
+    }
 }
