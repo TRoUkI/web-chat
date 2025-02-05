@@ -13,3 +13,7 @@ Technologies Used
 Backend: Java 17, Spring Boot, WebSocket, JWT
 Frontend: Angular 19 (14 features)
 Database: PostgreSQL
+
+To-do: 
+Typing status indicator.
+Docker container
